@@ -1,0 +1,45 @@
+# Dockerfile otimizado para Nginx - Web Solutions
+FROM nginx:1.24-alpine
+
+# Metadados da imagem
+LABEL maintainer="Web Solutions Ltda"
+LABEL description="Nginx customizado para Web Solutions"
+LABEL version="1.0"
+
+# Criar usuário não-root para segurança
+RUN addgroup -g 101 -S nginx-custom && \
+    adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx-custom -g nginx-custom nginx-custom
+
+# Remover arquivos desnecessários para otimizar tamanho
+RUN rm -rf /usr/share/nginx/html/* && \
+    rm -rf /var/log/nginx/* && \
+    rm -rf /tmp/*
+
+# Criar diretórios necessários com permissões corretas
+RUN mkdir -p /var/cache/nginx/client_temp && \
+    mkdir -p /var/cache/nginx/proxy_temp && \
+    mkdir -p /var/cache/nginx/fastcgi_temp && \
+    mkdir -p /var/cache/nginx/uwsgi_temp && \
+    mkdir -p /var/cache/nginx/scgi_temp && \
+    chown -R nginx-custom:nginx-custom /var/cache/nginx && \
+    chown -R nginx-custom:nginx-custom /usr/share/nginx/html && \
+    chmod -R 755 /var/cache/nginx
+
+# Configuração customizada do Nginx
+COPY dockerfiles/nginx.conf /etc/nginx/nginx.conf
+
+# Página HTML customizada
+COPY dockerfiles/nginx-index.html /usr/share/nginx/html/index.html
+
+# Definir usuário não-root
+USER nginx-custom
+
+# Expor porta
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost/ || exit 1
+
+# Comando de inicialização
+CMD ["nginx", "-g", "daemon off;"]
