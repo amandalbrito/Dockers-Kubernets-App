@@ -3,7 +3,6 @@
 
 # 🐳 3️⃣ DOCKER + KUBERNETES
 
-```md
 # 🐳 Projeto com Docker e Kubernetes
 
 ## 📌 Sobre
